@@ -6,13 +6,15 @@ public class WebCamTest : MonoBehaviour {
 	public string deviceName;
 	public string path;
 	public Texture2D texture;
-	public float pollTime;
+	public float pollTime = 2;
 	public string uploadURL = "http://path.tacticalspace.org/paths/upload.processor.php";
 	public AudioClip[] dtmf;
 	public string pathname = "1";
 	int _CaptureCounter = 0;
 	WebCamTexture wct;
 	string _SavePath;
+	float _timer;
+	string message = "";
 
 	
 	// Use this for initialization
@@ -22,7 +24,7 @@ public class WebCamTest : MonoBehaviour {
 		wct = new WebCamTexture(deviceName);
 		renderer.material.mainTexture = wct;
 		wct.Play();
-
+		_timer = pollTime;
 		_SavePath = Application.persistentDataPath+"//"; //Change the path here!
 		path = Application.persistentDataPath;
 	}
@@ -34,11 +36,24 @@ public class WebCamTest : MonoBehaviour {
 	
 	
 	void OnGUI() {      
-		if (GUI.Button(new Rect(10, 70, 50, 30), "Click"))
-			TakeSnapshot();
+		//if (GUI.Button(new Rect(10, 70, 50, 30), "Click"))
+		//	TakeSnapshot();
+		string displaymessage = "Counter: " + _timer + "\r\n" + "Image Count: " + _CaptureCounter;
+		GUI.Label (new Rect (10, 70, 200, 80), displaymessage+"\r\n"+message);
 		
 	}
-	
+
+	void Update() {
+		_timer -= Time.deltaTime;
+		if (_timer < 0) {
+			_timer = pollTime;
+			message = "";
+			TakeSnapshot ();
+			move (2);
+		}
+
+	}
+
 	// For saving to the _savepath
 
 	void StartUpload()
@@ -47,6 +62,9 @@ public class WebCamTest : MonoBehaviour {
 		StartCoroutine("UploadImage()");
 	}
 
+	void move(int i) {
+		audio.PlayOneShot (dtmf [i]);
+	}
 
 	string GetNextFilename() {
 		string filename = _SavePath + _CaptureCounter.ToString ("0000") + ".png";
@@ -94,8 +112,10 @@ public class WebCamTest : MonoBehaviour {
 		if (www.error == null)
 		{
 			Debug.Log("WWW Ok!: " + www.data);
+			message = "WWW Ok!: " + www.data;
 		} else {
 			Debug.Log("WWW Error: "+ www.error);
+			message = "WWW Error: "+ www.error;
 		}    
 	}
 
